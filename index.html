@@ -89,9 +89,8 @@
             z-index: 100;
         }
         
-        /* ✅ НЕЖНО-ЗЕЛЁНЫЙ ЦВЕТ ПЛАШКИ */
         .quiz-container {
-            background: #e8f5e9; /* вместо #fff8e1 */
+            background: #e8f5e9;
             padding: 25px;
             border-radius: 16px;
             color: black;
@@ -418,7 +417,6 @@
             }
         }
 
-        /* Для очень маленьких экранов */
         @media (max-width: 480px) {
             .quiz-option-row {
                 flex-direction: column;
@@ -524,7 +522,6 @@
         }
 
         const quizQuestions = [
-            // Food & Drinks
             { question: "I opened a ______ of tuna for lunch.", options: ["tin", "jar", "bottle"], answer: "tin" },
             { question: "She drank a ______ of water after running.", options: ["glass", "loaf", "bar"], answer: "glass" },
             { question: "There's a ______ of juice on the table for everyone.", options: ["bottle", "can", "packet"], answer: "bottle" },
@@ -538,15 +535,11 @@
             { question: "We bought a ______ of cola for the party.", options: ["bottle", "packet", "bar"], answer: "bottle" },
             { question: "She served a ______ of rice with the curry.", options: ["bowl", "cup", "glass"], answer: "bowl" },
             { question: "I need to buy a ______ of meat for dinner.", options: ["kilo", "jar", "bottle"], answer: "kilo" },
-            
-            // Household & Other items
             { question: "There's a new ______ of soap in the bathroom.", options: ["bar", "can", "packet"], answer: "bar" },
             { question: "He gave her a ______ of chocolate for her birthday.", options: ["bar", "bottle", "loaf"], answer: "bar" },
             { question: "We need a ______ of flour to make cookies.", options: ["bag", "jar", "can"], answer: "bag" },
             { question: "Would you like a ______ of cheese with your apple?", options: ["piece", "slice", "bar"], answer: "piece" },
             { question: "They bought a new ______ of furniture for the living room.", options: ["piece", "bar", "bottle"], answer: "piece" },
-            
-            // Mixed variations for more diversity
             { question: "My grandmother keeps a ______ of honey in her cupboard.", options: ["jar", "can", "bottle"], answer: "jar" },
             { question: "For breakfast, I have a ______ of bread with butter.", options: ["slice", "piece", "bar"], answer: "slice" },
             { question: "The recipe requires one ______ of flour.", options: ["bag", "packet", "jar"], answer: "bag" },
@@ -569,14 +562,12 @@
         const cartImage = new Image();
         cartImage.src = "https://i.postimg.cc/sx5BjSF7/4.png";
 
-        // ✅ Более узкая игровая зона для мобильных устройств
         let GAME_AREA_LEFT = 80;
         let GAME_AREA_RIGHT = 720;
         let GAME_AREA_WIDTH = GAME_AREA_RIGHT - GAME_AREA_LEFT;
 
         const CART_TARGET_HEIGHT = 140;
 
-        // Добавьте переменные для масштабирования
         let canvasScale = 1;
         let originalWidth = 800;
         let originalHeight = 600;
@@ -603,90 +594,78 @@
             easy: {
                 lives: 5,
                 cartWidth: 180,
-                spawnInterval: 1500, // Увеличил интервал спавна
+                spawnInterval: 1500,
                 speedMin: 1.0,
                 speedMax: 1.5,
-                initialDelay: 2000 // Задержка перед первым предметом
+                initialDelay: 2000
             },
             hard: {
                 lives: 3,
                 cartWidth: 120,
-                spawnInterval: 1000, // Увеличил интервал спавна
-                speedMin: 1.4,
-                speedMax: 2.0,
-                initialDelay: 1500 // Задержка перед первым предметом
+                spawnInterval: 1000,
+                speedMin: 1.8,    // 🔥 УВЕЛИЧЕННАЯ СКОРОСТЬ (было 1.4)
+                speedMax: 2.4,    // 🔥 УВЕЛИЧЕННАЯ СКОРОСТЬ (было 2.0)
+                initialDelay: 1500
             }
         };
 
-        // Функция для изменения размера канваса
         function resizeCanvas() {
             const container = document.querySelector('.game-container');
             const canvas = document.getElementById('gameCanvas');
             
             if (window.innerWidth <= 810) {
-                // Мобильный режим - занимаем весь экран
                 canvas.style.width = '100%';
                 canvas.style.height = '100%';
                 canvas.width = container.clientWidth;
                 canvas.height = container.clientHeight;
                 
-                // Масштабируем игровую логику
                 canvasScale = Math.min(container.clientWidth / originalWidth, container.clientHeight / originalHeight);
                 
-                // Ужеже игровую зону на мобильных устройствах
-                const mobileGameAreaRatio = 0.7; // 70% ширины экрана для игровой зоны
+                const mobileGameAreaRatio = 0.7;
                 const gameAreaWidthMobile = canvas.width * mobileGameAreaRatio;
                 
                 GAME_AREA_LEFT = (canvas.width - gameAreaWidthMobile) / 2;
                 GAME_AREA_RIGHT = GAME_AREA_LEFT + gameAreaWidthMobile;
                 GAME_AREA_WIDTH = gameAreaWidthMobile;
                 
-                // Обновляем размер тележки для мобильных
                 cart.width = difficultySettings[currentDifficulty].cartWidth * canvasScale * 0.9;
                 cart.height = CART_TARGET_HEIGHT * canvasScale * 0.9;
                 cart.y = canvas.height - 140 * canvasScale;
                 
             } else {
-                // Десктоп режим - фиксированный размер
                 canvas.style.width = '800px';
                 canvas.style.height = '600px';
                 canvas.width = 800;
                 canvas.height = 600;
                 canvasScale = 1;
                 
-                // Оригинальная игровая зона для десктопа
                 GAME_AREA_LEFT = 80;
                 GAME_AREA_RIGHT = 720;
                 GAME_AREA_WIDTH = GAME_AREA_RIGHT - GAME_AREA_LEFT;
                 
-                // Возвращаем оригинальные размеры
                 cart.width = difficultySettings[currentDifficulty].cartWidth;
                 cart.height = CART_TARGET_HEIGHT;
                 cart.y = canvas.height - 160;
             }
             
-            // Центрируем тележку
             cart.x = GAME_AREA_LEFT + (GAME_AREA_WIDTH - cart.width) / 2;
             
-            // Перерисовываем игру если она запущена
             if (gameRunning) {
                 drawGame();
             }
         }
 
-        // Функция для перерисовки игры
         function drawGame() {
             if (!gameRunning) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (!quizActive) update();
             drawItems();
             drawCart();
-            drawGameAreaBounds(); // Визуальные границы игровой зоны
+            drawGameAreaBounds();
         }
 
-        // Временно добавим визуальные границы игровой зоны
         function drawGameAreaBounds() {
-            if (window.innerWidth <= 810) { // Только на мобильных
+            if (window.innerWidth <= 810) {
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(GAME_AREA_LEFT, 0, GAME_AREA_WIDTH, canvas.height);
@@ -742,14 +721,12 @@
             items = [];
             shuffledQuizQuestions = shuffleArray(quizQuestions);
             
-            // Применяем масштабирование
             resizeCanvas();
             
             updateScore(); updateLives(); updateMisses();
             document.getElementById('gameControls').style.display = 'none';
             document.getElementById('authorBadge').style.display = 'none';
             
-            // Добавляем задержку перед первым предметом
             lastItemTime = Date.now() + settings.initialDelay;
             
             gameLoop();
@@ -789,9 +766,9 @@
 
             if (!img.complete || img.width === 0 || img.height === 0) return;
 
-            let targetHeight = (60 + Math.random() * 10) * canvasScale; // Уменьшил размер предметов
+            let targetHeight = (60 + Math.random() * 10) * canvasScale;
             if (key === "packet of rice") {
-                targetHeight *= 1.5; // Уменьшил множитель для packet of rice
+                targetHeight *= 1.5;
             }
 
             const scale = targetHeight / img.height;
@@ -801,7 +778,6 @@
             const settings = difficultySettings[currentDifficulty];
             const speed = (settings.speedMin + Math.random() * (settings.speedMax - settings.speedMin)) * canvasScale;
 
-            // ✅ Предметы падают ТОЛЬКО в узкой центральной зоне
             items.push({
                 x: GAME_AREA_LEFT + Math.random() * (GAME_AREA_WIDTH - w),
                 y: -h,
@@ -862,7 +838,6 @@
             }
             
             const settings = difficultySettings[currentDifficulty];
-            // Добавляем проверку, что прошло достаточно времени с начала игры
             const timeSinceStart = Date.now() - (lastItemTime - settings.initialDelay);
             if (!quizActive && timeSinceStart > settings.initialDelay && Date.now() - lastItemTime > settings.spawnInterval) {
                 createItem();
@@ -961,7 +936,7 @@
             if (!quizActive) update();
             drawItems();
             drawCart();
-            drawGameAreaBounds(); // Добавьте эту строку
+            drawGameAreaBounds();
             requestAnimationFrame(gameLoop);
         }
 
@@ -970,7 +945,6 @@
             const rect = canvas.getBoundingClientRect();
             const canvasX = ((clientX - rect.left) / rect.width) * canvas.width;
             
-            // ✅ Ограничение по узкой игровой зоне
             cart.x = Math.max(GAME_AREA_LEFT, Math.min(GAME_AREA_RIGHT - cart.width, canvasX - cart.width / 2));
         }
 
@@ -993,12 +967,10 @@
 
         document.addEventListener('keydown', (e) => {
             if (!gameRunning || quizActive) return;
-            // ✅ Ограничение по игровой зоне
             if (e.key === 'ArrowLeft') cart.x = Math.max(GAME_AREA_LEFT, cart.x - 20);
             else if (e.key === 'ArrowRight') cart.x = Math.min(GAME_AREA_RIGHT - cart.width, cart.x + 20);
         });
 
-        // Добавьте обработчики событий для масштабирования
         window.addEventListener('load', resizeCanvas);
         window.addEventListener('resize', resizeCanvas);
         window.addEventListener('orientationchange', resizeCanvas);
