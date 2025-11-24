@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Collocation Catcher</title>
     <style>
         html, body {
@@ -347,6 +347,106 @@
             font-family: inherit;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
+
+        /* Адаптивные стили для мобильных устройств */
+        @media (max-width: 810px) {
+            .game-container {
+                width: 100vw;
+                height: 100vh;
+                max-width: 100%;
+                max-height: 100vh;
+                border-radius: 0;
+                margin: 0;
+            }
+            
+            #gameCanvas {
+                width: 100% !important;
+                height: 100% !important;
+            }
+            
+            .top-bar {
+                top: 10px;
+                padding: 0 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+            
+            .stat-display {
+                font-size: 12px;
+                padding: 3px 6px;
+                min-width: 60px;
+            }
+            
+            .game-controls {
+                font-size: 11px;
+                bottom: 5px;
+                padding: 3px 10px;
+                white-space: nowrap;
+            }
+            
+            .quiz-container {
+                margin: 15px;
+                padding: 15px;
+                max-width: 90%;
+            }
+            
+            .quiz-question {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+            
+            .quiz-option {
+                font-size: 14px;
+                padding: 10px;
+                min-width: 80px;
+            }
+            
+            .help-btn {
+                top: 8px;
+                right: 8px;
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
+            
+            .author-badge {
+                bottom: 8px;
+                right: 8px;
+                padding: 3px 8px;
+                font-size: 11px;
+            }
+        }
+
+        /* Для очень маленьких экранов */
+        @media (max-width: 480px) {
+            .quiz-option-row {
+                flex-direction: column;
+                gap: 6px;
+            }
+            
+            .quiz-option {
+                min-width: auto;
+                width: 100%;
+                font-size: 13px;
+                padding: 8px;
+            }
+            
+            .stat-display {
+                font-size: 11px;
+                min-width: 55px;
+                padding: 2px 4px;
+            }
+            
+            .top-bar {
+                gap: 5px;
+            }
+            
+            .game-controls {
+                font-size: 10px;
+                padding: 2px 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -452,12 +552,17 @@
         const cartImage = new Image();
         cartImage.src = "https://i.postimg.cc/sx5BjSF7/4.png";
 
-        // ✅ Игровая зона (в координатах canvas 800px)
-        const GAME_AREA_LEFT = 80;
-        const GAME_AREA_RIGHT = 720;
-        const GAME_AREA_WIDTH = GAME_AREA_RIGHT - GAME_AREA_LEFT;
+        // ✅ Более узкая игровая зона для мобильных устройств
+        let GAME_AREA_LEFT = 80;
+        let GAME_AREA_RIGHT = 720;
+        let GAME_AREA_WIDTH = GAME_AREA_RIGHT - GAME_AREA_LEFT;
 
         const CART_TARGET_HEIGHT = 140;
+
+        // Добавьте переменные для масштабирования
+        let canvasScale = 1;
+        let originalWidth = 800;
+        let originalHeight = 600;
 
         let cart = { 
             x: GAME_AREA_LEFT + (GAME_AREA_WIDTH - 140) / 2,
@@ -493,6 +598,81 @@
                 speedMax: 2.0
             }
         };
+
+        // Функция для изменения размера канваса
+        function resizeCanvas() {
+            const container = document.querySelector('.game-container');
+            const canvas = document.getElementById('gameCanvas');
+            
+            if (window.innerWidth <= 810) {
+                // Мобильный режим - занимаем весь экран
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                
+                // Масштабируем игровую логику
+                canvasScale = Math.min(container.clientWidth / originalWidth, container.clientHeight / originalHeight);
+                
+                // Ужеже игровую зону на мобильных устройствах
+                const mobileGameAreaRatio = 0.7; // 70% ширины экрана для игровой зоны
+                const gameAreaWidthMobile = canvas.width * mobileGameAreaRatio;
+                
+                GAME_AREA_LEFT = (canvas.width - gameAreaWidthMobile) / 2;
+                GAME_AREA_RIGHT = GAME_AREA_LEFT + gameAreaWidthMobile;
+                GAME_AREA_WIDTH = gameAreaWidthMobile;
+                
+                // Обновляем размер тележки для мобильных
+                cart.width = difficultySettings[currentDifficulty].cartWidth * canvasScale * 0.9;
+                cart.height = CART_TARGET_HEIGHT * canvasScale * 0.9;
+                cart.y = canvas.height - 140 * canvasScale;
+                
+            } else {
+                // Десктоп режим - фиксированный размер
+                canvas.style.width = '800px';
+                canvas.style.height = '600px';
+                canvas.width = 800;
+                canvas.height = 600;
+                canvasScale = 1;
+                
+                // Оригинальная игровая зона для десктопа
+                GAME_AREA_LEFT = 80;
+                GAME_AREA_RIGHT = 720;
+                GAME_AREA_WIDTH = GAME_AREA_RIGHT - GAME_AREA_LEFT;
+                
+                // Возвращаем оригинальные размеры
+                cart.width = difficultySettings[currentDifficulty].cartWidth;
+                cart.height = CART_TARGET_HEIGHT;
+                cart.y = canvas.height - 160;
+            }
+            
+            // Центрируем тележку
+            cart.x = GAME_AREA_LEFT + (GAME_AREA_WIDTH - cart.width) / 2;
+            
+            // Перерисовываем игру если она запущена
+            if (gameRunning) {
+                drawGame();
+            }
+        }
+
+        // Функция для перерисовки игры
+        function drawGame() {
+            if (!gameRunning) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!quizActive) update();
+            drawItems();
+            drawCart();
+            drawGameAreaBounds(); // Визуальные границы игровой зоны
+        }
+
+        // Временно добавим визуальные границы игровой зоны
+        function drawGameAreaBounds() {
+            if (window.innerWidth <= 810) { // Только на мобильных
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(GAME_AREA_LEFT, 0, GAME_AREA_WIDTH, canvas.height);
+            }
+        }
 
         function showScoreBonus(containerElement) {
             const bonus = document.createElement('div');
@@ -543,8 +723,8 @@
             items = [];
             shuffledQuizQuestions = shuffleArray(quizQuestions);
             
-            cart.width = settings.cartWidth;
-            cart.x = GAME_AREA_LEFT + (GAME_AREA_WIDTH - cart.width) / 2;
+            // Применяем масштабирование
+            resizeCanvas();
             
             updateScore(); updateLives(); updateMisses();
             document.getElementById('gameControls').style.display = 'none';
@@ -587,9 +767,9 @@
 
             if (!img.complete || img.width === 0 || img.height === 0) return;
 
-            let targetHeight = 70 + Math.random() * 15;
+            let targetHeight = (60 + Math.random() * 10) * canvasScale; // Уменьшил размер предметов
             if (key === "packet of rice") {
-                targetHeight *= 2;
+                targetHeight *= 1.5; // Уменьшил множитель для packet of rice
             }
 
             const scale = targetHeight / img.height;
@@ -597,9 +777,9 @@
             const h = targetHeight;
 
             const settings = difficultySettings[currentDifficulty];
-            const speed = settings.speedMin + Math.random() * (settings.speedMax - settings.speedMin);
+            const speed = (settings.speedMin + Math.random() * (settings.speedMax - settings.speedMin)) * canvasScale;
 
-            // ✅ Предметы падают ТОЛЬКО в видимой зоне
+            // ✅ Предметы падают ТОЛЬКО в узкой центральной зоне
             items.push({
                 x: GAME_AREA_LEFT + Math.random() * (GAME_AREA_WIDTH - w),
                 y: -h,
@@ -612,15 +792,13 @@
 
         function drawCart() {
             if (cartImage.complete && cartImage.width > 0) {
-                const scale = CART_TARGET_HEIGHT / cartImage.height;
+                const scale = (CART_TARGET_HEIGHT * canvasScale) / cartImage.height;
                 const w = cartImage.width * scale;
-                const h = CART_TARGET_HEIGHT;
-                cart.width = w;
+                const h = CART_TARGET_HEIGHT * canvasScale;
                 ctx.drawImage(cartImage, cart.x, cart.y, w, h);
             } else {
                 ctx.fillStyle = '#4a5568';
-                ctx.fillRect(cart.x, cart.y, 140, 140);
-                cart.width = 140;
+                ctx.fillRect(cart.x, cart.y, cart.width, cart.height);
             }
         }
 
@@ -759,14 +937,16 @@
             if (!quizActive) update();
             drawItems();
             drawCart();
+            drawGameAreaBounds(); // Добавьте эту строку
             requestAnimationFrame(gameLoop);
         }
 
         function handlePointerMove(clientX) {
             if (!gameRunning || quizActive) return;
             const rect = canvas.getBoundingClientRect();
-            const canvasX = ((clientX - rect.left) / rect.width) * 800;
-            // ✅ Ограничение по игровой зоне
+            const canvasX = ((clientX - rect.left) / rect.width) * canvas.width;
+            
+            // ✅ Ограничение по узкой игровой зоне
             cart.x = Math.max(GAME_AREA_LEFT, Math.min(GAME_AREA_RIGHT - cart.width, canvasX - cart.width / 2));
         }
 
@@ -793,6 +973,11 @@
             if (e.key === 'ArrowLeft') cart.x = Math.max(GAME_AREA_LEFT, cart.x - 20);
             else if (e.key === 'ArrowRight') cart.x = Math.min(GAME_AREA_RIGHT - cart.width, cart.x + 20);
         });
+
+        // Добавьте обработчики событий для масштабирования
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', resizeCanvas);
     </script>
 </body>
 </html>
