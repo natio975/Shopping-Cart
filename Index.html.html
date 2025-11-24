@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collocation Catcher</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 650px;
+            background: url('https://i.postimg.cc/4dhsG56N/1763915725.png') center/cover no-repeat;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background: transparent;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .stat-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 6px 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .game-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.92);
+            padding: 8px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #555;
+            z-index: 10;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            z-index: 100;
+        }
+        
+        .quiz-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            color: black;
+            max-width: 480px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        .quiz-question {
+            font-size: 20px;
+            margin-bottom: 18px;
+            color: #222;
+            line-height: 1.4;
+        }
+        
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        
+        .quiz-option {
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .quiz-option:hover {
+            background: #e3f2fd;
+            transform: scale(1.02);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .quiz-option.wrong {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+            border-color: #f44336;
+            background-color: #ffebee;
+        }
+
+        /* ✅ Анимация +5 */
+        .score-bonus {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+            pointer-events: none;
+            z-index: 1000;
+            text-shadow: 0 0 6px white;
+            animation: floatUp 1s forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-60px); }
+        }
+
+        /* ✅ Кнопка ? */
+        .help-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            z-index: 300;
+        }
+
+        .help-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        /* ✅ Модальное окно с инструкциями */
+        .instructions-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 400;
+        }
+
+        .instructions-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 500px;
+            text-align: left;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        .instructions-content h2 {
+            color: #333;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .instructions-content ul {
+            padding-left: 20px;
+        }
+
+        .instructions-content li {
+            margin-bottom: 10px;
+        }
+
+        .close-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 8px 20px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            background: url('https://i.postimg.cc/4dhsG56N/1763915725.png') center/cover no-repeat;
+            color: blue;
+            text-shadow: 0 0 5px black;
+        }
+        
+        .start-title {
+            font-size: 36px;
+            color: white;
+            margin-bottom: 40px;
+            text-shadow: 0 0 5px grey;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+        
+        .start-btn {
+            padding: 12px 32px;
+            font-size: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .win-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            z-index: 200;
+        }
+
+        .win-container {
+            background: rgba(30, 30, 30, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .win-title {
+            font-size: 42px;
+            color: gold;
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px gold;
+        }
+
+        .win-subtitle {
+            font-size: 20px;
+            color: #eee;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .play-again-btn {
+            padding: 12px 32px;
+            font-size: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="top-bar">
+            <div class="stat-display">Score: <span id="score">0</span></div>
+            <div class="stat-display">Misses: <span id="misses">0</span></div>
+            <div class="stat-display">Lives: <span id="lives">3</span></div>
+        </div>
+        
+        <div class="game-controls">
+            Use ← → arrow keys or mouse to move the cart
+        </div>
+        
+        <div class="ui-overlay" id="quizOverlay">
+            <div class="quiz-container">
+                <div class="quiz-question" id="quizQuestion"></div>
+                <div class="quiz-options" id="quizOptions"></div>
+            </div>
+        </div>
+        
+        <!-- ✅ Стартовый экран с кнопкой ? -->
+        <div class="start-screen" id="startScreen">
+            <h1 class="start-title">🛒 Collocation Catcher</h1>
+            <div style="margin-top: 10px; display: flex; gap: 20px;">
+                <button class="start-btn" style="background:#4CAF50; padding:10px 24px;" onclick="startGame('easy')">Easy</button>
+                <button class="start-btn" style="background:#f44336; padding:10px 24px;" onclick="startGame('hard')">Hard</button>
+            </div>
+            <div class="help-btn" onclick="showInstructions()">?</div>
+        </div>
+        
+        <div class="win-screen" id="winScreen">
+            <div class="win-container">
+                <h1 class="win-title">🎉 Congratulations!</h1>
+                <p class="win-subtitle">You mastered measure words!</p>
+                <button class="play-again-btn" onclick="resetGame()">Play Again</button>
+            </div>
+        </div>
+
+        <!-- ✅ Модальное окно с инструкциями -->
+        <div class="instructions-modal" id="instructionsModal">
+            <div class="instructions-content">
+                <h2>How to Play</h2>
+                <ul>
+                    <li>🟢 Catch falling items with your shopping cart.</li>
+                    <li>🟢 Every 5 points, a quiz appears.</li>
+                    <li>🟢 Choose the correct word to complete the sentence.</li>
+                    <li>🟢 You must find the right answer to continue!</li>
+                    <li>🟢 Get <strong>+5 points</strong> for a correct answer on the first try.</li>
+                    <li>🟢 Reach <strong>100 points</strong> to win!</li>
+                </ul>
+                <button class="close-btn" onclick="hideInstructions()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const itemUrls = {
+            "jar of jam": "https://i.postimg.cc/YvZr3mMr/10.png",
+            "can of cola": "https://i.postimg.cc/MGdVNgVV/Untitled-design-(2).png",
+            "bottle of cola": "https://i.postimg.cc/75fP0N8L/7.png",
+            "carton of milk": "https://i.postimg.cc/CRzMk4TV/4.png",
+            "loaf of bread": "https://i.postimg.cc/DS8fLck3/5.png",
+            "bar of chocolate": "https://i.postimg.cc/0zb5DCRx/6.png",
+            "packet of rice": "https://i.postimg.cc/wy99T1Jw/7.png",
+            "tin of tuna": "https://i.postimg.cc/BjkSg14j/Untitled-design.png",
+            "carton of juice": "https://i.postimg.cc/G4H3Gjw8/9.png"
+        };
+
+        const itemImages = {};
+        for (const key in itemUrls) {
+            itemImages[key] = new Image();
+            itemImages[key].src = itemUrls[key];
+        }
+
+        const quizQuestions = [
+            { question: "She spread a ______ of jam on her toast.", options: ["jar", "bottle", "packet"], answer: "jar" },
+            { question: "He opened a ______ of cola.", options: ["can", "loaf", "bar"], answer: "can" },
+            { question: "We bought a ______ of cola for the party.", options: ["bottle", "bowl", "loaf"], answer: "bottle" },
+            { question: "There's a ______ of milk in the fridge.", options: ["carton", "bar", "loaf"], answer: "carton" },
+            { question: "She bought a fresh ______ of bread.", options: ["loaf", "can", "bar"], answer: "loaf" },
+            { question: "He ate a ______ of chocolate after dinner.", options: ["bar", "bottle", "carton"], answer: "bar" },
+            { question: "We need a new ______ of rice.", options: ["packet", "bottle", "bar"], answer: "packet" },
+            { question: "He made a sandwich with a ______ of tuna.", options: ["tin", "loaf", "carton"], answer: "tin" },
+            { question: "She served a ______ of rice with chicken.", options: ["bowl", "bar", "loaf"], answer: "bowl" },
+            { question: "They drink a ______ of juice at lunch.", options: ["carton", "bar", "tin"], answer: "carton" },
+            { question: "She has a ______ of jam in the cupboard.", options: ["jar", "loaf", "bowl"], answer: "jar" },
+            { question: "He poured a ______ of milk into his cereal.", options: ["carton", "bottle", "can"], answer: "carton" },
+            { question: "We keep tuna in a ______.", options: ["tin", "bowl", "bar"], answer: "tin" },
+            { question: "She bought a big ______ of chocolate.", options: ["bar", "loaf", "packet"], answer: "bar" },
+            { question: "Would you like a ______ of cola?", options: ["can", "bowl", "loaf"], answer: "can" },
+            { question: "He drinks juice from a ______.", options: ["carton", "tin", "bar"], answer: "carton" },
+            { question: "We stored the rice in a ______.", options: ["packet", "can", "bar"], answer: "packet" },
+            { question: "She bought a ______ of bread for sandwiches.", options: ["loaf", "bar", "can"], answer: "loaf" },
+            { question: "They sell cola in a ______ or a bottle.", options: ["can", "bar", "bowl"], answer: "can" },
+            { question: "He warmed up a ______ of rice.", options: ["bowl", "carton", "loaf"], answer: "bowl" }
+        ];
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const cartImage = new Image();
+        cartImage.src = "https://i.postimg.cc/sx5BjSF7/4.png";
+
+        const CART_TARGET_HEIGHT = 140;
+
+        let cart = { 
+            x: canvas.width / 2 - 70, 
+            y: canvas.height - 160,
+            width: 140, 
+            height: CART_TARGET_HEIGHT 
+        };
+
+        let score = 0;
+        let lives = 3;
+        let misses = 0;
+        let gameRunning = false;
+        let items = [];
+        let lastItemTime = 0;
+        let quizActive = false;
+        let lastQuizScore = 0;
+        let shuffledQuizQuestions = [];
+        let currentDifficulty = 'easy';
+
+        const difficultySettings = {
+            easy: {
+                lives: 5,
+                cartWidth: 180,
+                spawnInterval: 1000,
+                speedMin: 1.0,
+                speedMax: 1.5
+            },
+            hard: {
+                lives: 3,
+                cartWidth: 120,
+                spawnInterval: 700,
+                speedMin: 1.4,
+                speedMax: 2.0
+            }
+        };
+
+        function showScoreBonus(containerElement) {
+            const bonus = document.createElement('div');
+            bonus.className = 'score-bonus';
+            bonus.textContent = '+5';
+            
+            const rect = containerElement.getBoundingClientRect();
+            bonus.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+            bonus.style.top = (rect.top - 40) + 'px';
+            
+            document.body.appendChild(bonus);
+            setTimeout(() => {
+                if (bonus.parentNode) {
+                    bonus.parentNode.removeChild(bonus);
+                }
+            }, 1000);
+        }
+
+        function showInstructions() {
+            document.getElementById('instructionsModal').style.display = 'flex';
+        }
+
+        function hideInstructions() {
+            document.getElementById('instructionsModal').style.display = 'none';
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function areAllImagesLoaded() {
+            const itemsLoaded = Object.values(itemImages).every(img => img.complete && img.width > 0);
+            return itemsLoaded && cartImage.complete;
+        }
+
+        function initGame() {
+            const settings = difficultySettings[currentDifficulty];
+            gameRunning = true;
+            score = 0;
+            lives = settings.lives;
+            misses = 0;
+            lastQuizScore = 0;
+            items = [];
+            shuffledQuizQuestions = shuffleArray(quizQuestions);
+            
+            cart.width = settings.cartWidth;
+            cart.x = Math.max(0, Math.min(canvas.width - cart.width, canvas.width / 2 - cart.width / 2));
+            
+            updateScore(); updateLives(); updateMisses();
+            gameLoop();
+        }
+
+        function startGameWhenReady() {
+            if (areAllImagesLoaded()) {
+                score = 0;
+                initGame();
+            } else {
+                setTimeout(startGameWhenReady, 100);
+            }
+        }
+
+        function startGame(difficulty = 'easy') {
+            currentDifficulty = difficulty;
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('winScreen').style.display = 'none';
+            startGameWhenReady();
+        }
+
+        function resetGame() {
+            document.getElementById('winScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+
+        function updateScore() { document.getElementById('score').textContent = score; }
+        function updateLives() { document.getElementById('lives').textContent = lives; }
+        function updateMisses() { document.getElementById('misses').textContent = misses; }
+
+        function createItem() {
+            const keys = Object.keys(itemImages);
+            const key = keys[Math.floor(Math.random() * keys.length)];
+            const img = itemImages[key];
+
+            if (!img.complete || img.width === 0 || img.height === 0) return;
+
+            let targetHeight = 70 + Math.random() * 15;
+            if (key === "packet of rice") {
+                targetHeight *= 2;
+            }
+
+            const scale = targetHeight / img.height;
+            const w = img.width * scale;
+            const h = targetHeight;
+
+            const settings = difficultySettings[currentDifficulty];
+            const speed = settings.speedMin + Math.random() * (settings.speedMax - settings.speedMin);
+
+            items.push({
+                x: Math.random() * (canvas.width - w),
+                y: -h,
+                width: w,
+                height: h,
+                speed: speed,
+                key: key
+            });
+        }
+
+        function drawCart() {
+            if (cartImage.complete && cartImage.width > 0) {
+                const scale = CART_TARGET_HEIGHT / cartImage.height;
+                const w = cartImage.width * scale;
+                const h = CART_TARGET_HEIGHT;
+                cart.width = w;
+                ctx.drawImage(cartImage, cart.x, cart.y, w, h);
+            } else {
+                ctx.fillStyle = '#4a5568';
+                ctx.fillRect(cart.x, cart.y, 140, 140);
+                cart.width = 140;
+            }
+        }
+
+        function drawItems() {
+            items.forEach(item => {
+                const img = itemImages[item.key];
+                if (img && img.complete && img.width > 0) {
+                    ctx.drawImage(img, item.x, item.y, item.width, item.height);
+                }
+            });
+        }
+
+        function update() {
+            for (let i = items.length - 1; i >= 0; i--) {
+                items[i].y += items[i].speed;
+                
+                if (items[i].y + items[i].height > cart.y &&
+                    items[i].x + items[i].width > cart.x &&
+                    items[i].x < cart.x + cart.width) {
+                    items.splice(i, 1);
+                    score += 1;
+                    updateScore();
+                    
+                    if (score >= 5 && score <= 100 && score > lastQuizScore && score % 5 === 0) {
+                        showQuiz();
+                        lastQuizScore = score;
+                    }
+                    
+                    if (score >= 100 && gameRunning) {
+                        winGame();
+                    }
+                }
+                else if (items[i].y > canvas.height) {
+                    items.splice(i, 1);
+                    lives--; misses++;
+                    updateLives(); updateMisses();
+                    if (lives <= 0) gameOver();
+                }
+            }
+            
+            const settings = difficultySettings[currentDifficulty];
+            if (!quizActive && Date.now() - lastItemTime > settings.spawnInterval) {
+                createItem();
+                lastItemTime = Date.now();
+            }
+        }
+
+        function showQuiz() {
+            quizActive = true;
+            const quizIndex = Math.floor((score - 5) / 5);
+            const q = shuffledQuizQuestions[quizIndex % shuffledQuizQuestions.length];
+            document.getElementById('quizQuestion').textContent = q.question;
+            const cont = document.getElementById('quizOptions');
+            cont.innerHTML = '';
+
+            let firstAttempt = true;
+
+            const shuffledOptions = [...q.options]
+                .map(value => ({ value, sort: Math.random() }))
+                .sort((a, b) => a.sort - b.sort)
+                .map(({ value }) => value);
+
+            shuffledOptions.forEach(opt => {
+                const el = document.createElement('div');
+                el.className = 'quiz-option';
+                el.textContent = opt;
+
+                el.onclick = () => {
+                    if (opt !== q.answer) {
+                        el.classList.add('wrong');
+                        setTimeout(() => el.classList.remove('wrong'), 400);
+                        firstAttempt = false;
+                    } else {
+                        if (firstAttempt) {
+                            score += 5;
+                            updateScore();
+                            showScoreBonus(document.querySelector('.quiz-container'));
+                        }
+                        document.getElementById('quizOverlay').style.display = 'none';
+                        quizActive = false;
+                    }
+                };
+
+                cont.appendChild(el);
+            });
+            
+            document.getElementById('quizOverlay').style.display = 'flex';
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            alert(`Game Over! Final score: ${score}`);
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+
+        function winGame() {
+            gameRunning = false;
+            document.getElementById('winScreen').style.display = 'flex';
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!quizActive) update();
+            drawItems();
+            drawCart();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning || quizActive) return;
+            if (e.key === 'ArrowLeft') cart.x = Math.max(0, cart.x - 20);
+            else if (e.key === 'ArrowRight') cart.x = Math.min(canvas.width - cart.width, cart.x + 20);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!gameRunning || quizActive) return;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            cart.x = Math.max(0, Math.min(canvas.width - cart.width, mouseX - cart.width / 2));
+        });
+    </script>
+</body>
+</html>
