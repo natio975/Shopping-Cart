@@ -91,7 +91,7 @@
         
         /* ✅ НЕЖНО-ЗЕЛЁНЫЙ ЦВЕТ ПЛАШКИ */
         .quiz-container {
-            background: #e8f5e9;
+            background: #e8f5e9; /* вместо #fff8e1 */
             padding: 25px;
             border-radius: 16px;
             color: black;
@@ -603,18 +603,18 @@
             easy: {
                 lives: 5,
                 cartWidth: 180,
-                spawnInterval: 1500,
+                spawnInterval: 1500, // Увеличил интервал спавна
                 speedMin: 1.0,
                 speedMax: 1.5,
-                initialDelay: 2000
+                initialDelay: 2000 // Задержка перед первым предметом
             },
             hard: {
                 lives: 3,
                 cartWidth: 120,
-                spawnInterval: 1000,
+                spawnInterval: 1000, // Увеличил интервал спавна
                 speedMin: 1.4,
                 speedMax: 2.0,
-                initialDelay: 1500
+                initialDelay: 1500 // Задержка перед первым предметом
             }
         };
 
@@ -634,7 +634,7 @@
                 canvasScale = Math.min(container.clientWidth / originalWidth, container.clientHeight / originalHeight);
                 
                 // Ужеже игровую зону на мобильных устройствах
-                const mobileGameAreaRatio = 0.7;
+                const mobileGameAreaRatio = 0.7; // 70% ширины экрана для игровой зоны
                 const gameAreaWidthMobile = canvas.width * mobileGameAreaRatio;
                 
                 GAME_AREA_LEFT = (canvas.width - gameAreaWidthMobile) / 2;
@@ -681,12 +681,12 @@
             if (!quizActive) update();
             drawItems();
             drawCart();
-            drawGameAreaBounds();
+            drawGameAreaBounds(); // Визуальные границы игровой зоны
         }
 
         // Временно добавим визуальные границы игровой зоны
         function drawGameAreaBounds() {
-            if (window.innerWidth <= 810) {
+            if (window.innerWidth <= 810) { // Только на мобильных
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(GAME_AREA_LEFT, 0, GAME_AREA_WIDTH, canvas.height);
@@ -789,9 +789,9 @@
 
             if (!img.complete || img.width === 0 || img.height === 0) return;
 
-            let targetHeight = (60 + Math.random() * 10) * canvasScale;
+            let targetHeight = (60 + Math.random() * 10) * canvasScale; // Уменьшил размер предметов
             if (key === "packet of rice") {
-                targetHeight *= 1.5;
+                targetHeight *= 1.5; // Уменьшил множитель для packet of rice
             }
 
             const scale = targetHeight / img.height;
@@ -862,6 +862,7 @@
             }
             
             const settings = difficultySettings[currentDifficulty];
+            // Добавляем проверку, что прошло достаточно времени с начала игры
             const timeSinceStart = Date.now() - (lastItemTime - settings.initialDelay);
             if (!quizActive && timeSinceStart > settings.initialDelay && Date.now() - lastItemTime > settings.spawnInterval) {
                 createItem();
@@ -960,7 +961,7 @@
             if (!quizActive) update();
             drawItems();
             drawCart();
-            drawGameAreaBounds();
+            drawGameAreaBounds(); // Добавьте эту строку
             requestAnimationFrame(gameLoop);
         }
 
@@ -992,6 +993,7 @@
 
         document.addEventListener('keydown', (e) => {
             if (!gameRunning || quizActive) return;
+            // ✅ Ограничение по игровой зоне
             if (e.key === 'ArrowLeft') cart.x = Math.max(GAME_AREA_LEFT, cart.x - 20);
             else if (e.key === 'ArrowRight') cart.x = Math.min(GAME_AREA_RIGHT - cart.width, cart.x + 20);
         });
