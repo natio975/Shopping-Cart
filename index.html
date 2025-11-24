@@ -88,7 +88,7 @@
         }
         
         .quiz-container {
-            background: #fff8e1; /* ✅ нежно-жёлтый */
+            background: #fff8e1;
             padding: 25px;
             border-radius: 16px;
             color: black;
@@ -276,13 +276,20 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
-        .attribution {
+        /* ✅ Авторство в стиле кнопок */
+        .author-badge {
             position: absolute;
-            bottom: 15px;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
             text-shadow: 0 0 3px black;
             letter-spacing: 0.5px;
+            z-index: 210;
         }
         
         .win-screen {
@@ -363,7 +370,8 @@
                 <button class="start-btn" style="background:#f44336; padding:10px 24px;" onclick="startGame('hard')">Hard</button>
             </div>
             <div class="help-btn" onclick="showInstructions()">?</div>
-            <div class="attribution">© @ioffenat</div>
+            <!-- ✅ Авторство -->
+            <div class="author-badge" id="authorBadge">@ioffenat</div>
         </div>
         
         <div class="win-screen" id="winScreen">
@@ -528,8 +536,9 @@
             cart.x = Math.max(0, Math.min(canvas.width - cart.width, canvas.width / 2 - cart.width / 2));
             
             updateScore(); updateLives(); updateMisses();
-            // ✅ Скрываем подсказку при старте
             document.getElementById('gameControls').style.display = 'none';
+            // ✅ Скрываем авторство при старте
+            document.getElementById('authorBadge').style.display = 'none';
             
             gameLoop();
         }
@@ -553,8 +562,9 @@
         function resetGame() {
             document.getElementById('winScreen').style.display = 'none';
             document.getElementById('startScreen').style.display = 'flex';
-            // ✅ Показываем подсказку снова
             document.getElementById('gameControls').style.display = 'block';
+            // ✅ Показываем авторство снова
+            document.getElementById('authorBadge').style.display = 'block';
         }
 
         function updateScore() { document.getElementById('score').textContent = score; }
@@ -742,7 +752,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // ✅ Управление: мышь + сенсор
         function handlePointerMove(clientX) {
             if (!gameRunning || quizActive) return;
             const rect = canvas.getBoundingClientRect();
