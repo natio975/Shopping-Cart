@@ -6,7 +6,7 @@
     <title>Collocation Catcher</title>
     <style>
         html, body {
-            overscroll-behavior: none; /* отключает подпрыгивание на iOS */
+            overscroll-behavior: none;
             margin: 0;
             padding: 0;
             background: #f0f0f0;
@@ -20,11 +20,9 @@
         
         .game-container {
             position: relative;
-            width: min(95vw, 800px);
-            height: min(90vh, 650px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            height: 650px;
             background: url('https://i.postimg.cc/4dhsG56N/1763915725.png') center/cover no-repeat;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -33,14 +31,11 @@
         }
         
         #gameCanvas {
+            display: block;
             width: 800px;
             height: 600px;
-            display: block;
             background: transparent;
             touch-action: none;
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
         }
 
         .top-bar {
@@ -260,7 +255,6 @@
             text-shadow: 0 0 5px black;
         }
         
-        /* ✅ Адаптивный заголовок */
         .start-title {
             font-size: clamp(28px, 6vw, 36px);
             color: white;
@@ -761,12 +755,13 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // ✅ ИСПРАВЛЕННОЕ УПРАВЛЕНИЕ ДЛЯ ТЕЛЕФОНА
+        // ✅ ИСПРАВЛЕННОЕ УПРАВЛЕНИЕ — ТОЧНЫЕ КООРДИНАТЫ
         function handlePointerMove(clientX) {
             if (!gameRunning || quizActive) return;
             const rect = canvas.getBoundingClientRect();
-            const mouseX = clientX - rect.left;
-            cart.x = Math.max(0, Math.min(canvas.width - cart.width, mouseX - cart.width / 2));
+            // Преобразуем позицию на экране в координаты canvas (0..800)
+            const canvasX = ((clientX - rect.left) / rect.width) * 800;
+            cart.x = Math.max(0, Math.min(800 - cart.width, canvasX - cart.width / 2));
         }
 
         canvas.addEventListener('mousemove', (e) => {
@@ -789,7 +784,7 @@
         document.addEventListener('keydown', (e) => {
             if (!gameRunning || quizActive) return;
             if (e.key === 'ArrowLeft') cart.x = Math.max(0, cart.x - 20);
-            else if (e.key === 'ArrowRight') cart.x = Math.min(canvas.width - cart.width, cart.x + 20);
+            else if (e.key === 'ArrowRight') cart.x = Math.min(800 - cart.width, cart.x + 20);
         });
     </script>
 </body>
