@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Collocation Catcher</title>
     <style>
         body {
@@ -19,20 +19,21 @@
         
         .game-container {
             position: relative;
-            width: 800px;
+            width: 100%;
+            max-width: 800px;
             height: 650px;
             background: url('https://i.postimg.cc/4dhsG56N/1763915725.png') center/cover no-repeat;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
         
         #gameCanvas {
             display: block;
+            width: 100%;
+            height: 100%;
             background: transparent;
+            touch-action: none;
         }
 
         .top-bar {
@@ -87,42 +88,53 @@
         }
         
         .quiz-container {
-            background: white;
+            background: #fff8e1; /* ✅ нежно-жёлтый */
             padding: 25px;
-            border-radius: 12px;
+            border-radius: 16px;
             color: black;
-            max-width: 480px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            max-width: 500px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            position: relative;
+            border-top: 4px solid #4CAF50;
         }
         
         .quiz-question {
             font-size: 20px;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
             color: #222;
             line-height: 1.4;
+            text-align: center;
         }
         
-        .quiz-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 18px;
+        .quiz-option-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        
+        .quiz-option-single {
+            display: flex;
+            justify-content: center;
+            margin-top: 8px;
         }
         
         .quiz-option {
-            padding: 12px;
+            padding: 14px;
             background: #f8f9fa;
             border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 17px;
             text-align: center;
-            transition: all 0.2s;
+            transition: all 0.25s;
+            min-width: 120px;
+            box-sizing: border-box;
         }
         
         .quiz-option:hover {
             background: #e3f2fd;
-            transform: scale(1.02);
+            transform: translateY(-2px);
         }
 
         @keyframes shake {
@@ -136,7 +148,6 @@
             background-color: #ffebee;
         }
 
-        /* ✅ Анимация +5 */
         .score-bonus {
             position: absolute;
             font-size: 24px;
@@ -153,7 +164,6 @@
             100% { opacity: 0; transform: translateY(-60px); }
         }
 
-        /* ✅ Кнопка ? */
         .help-btn {
             position: absolute;
             top: 20px;
@@ -178,7 +188,6 @@
             transform: scale(1.05);
         }
 
-        /* ✅ Модальное окно с инструкциями */
         .instructions-modal {
             position: absolute;
             top: 0;
@@ -267,6 +276,15 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
+        .attribution {
+            position: absolute;
+            bottom: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            text-shadow: 0 0 3px black;
+            letter-spacing: 0.5px;
+        }
+        
         .win-screen {
             position: absolute;
             top: 0;
@@ -327,18 +345,17 @@
             <div class="stat-display">Lives: <span id="lives">3</span></div>
         </div>
         
-        <div class="game-controls">
+        <div class="game-controls" id="gameControls">
             Use ← → arrow keys or mouse to move the cart
         </div>
         
         <div class="ui-overlay" id="quizOverlay">
             <div class="quiz-container">
                 <div class="quiz-question" id="quizQuestion"></div>
-                <div class="quiz-options" id="quizOptions"></div>
+                <div id="quizOptions"></div>
             </div>
         </div>
         
-        <!-- ✅ Стартовый экран с кнопкой ? -->
         <div class="start-screen" id="startScreen">
             <h1 class="start-title">🛒 Collocation Catcher</h1>
             <div style="margin-top: 10px; display: flex; gap: 20px;">
@@ -346,6 +363,7 @@
                 <button class="start-btn" style="background:#f44336; padding:10px 24px;" onclick="startGame('hard')">Hard</button>
             </div>
             <div class="help-btn" onclick="showInstructions()">?</div>
+            <div class="attribution">© @ioffenat</div>
         </div>
         
         <div class="win-screen" id="winScreen">
@@ -356,7 +374,6 @@
             </div>
         </div>
 
-        <!-- ✅ Модальное окно с инструкциями -->
         <div class="instructions-modal" id="instructionsModal">
             <div class="instructions-content">
                 <h2>How to Play</h2>
@@ -511,6 +528,9 @@
             cart.x = Math.max(0, Math.min(canvas.width - cart.width, canvas.width / 2 - cart.width / 2));
             
             updateScore(); updateLives(); updateMisses();
+            // ✅ Скрываем подсказку при старте
+            document.getElementById('gameControls').style.display = 'none';
+            
             gameLoop();
         }
 
@@ -533,6 +553,8 @@
         function resetGame() {
             document.getElementById('winScreen').style.display = 'none';
             document.getElementById('startScreen').style.display = 'flex';
+            // ✅ Показываем подсказку снова
+            document.getElementById('gameControls').style.display = 'block';
         }
 
         function updateScore() { document.getElementById('score').textContent = score; }
@@ -634,22 +656,27 @@
             const cont = document.getElementById('quizOptions');
             cont.innerHTML = '';
 
-            let firstAttempt = true;
-
             const shuffledOptions = [...q.options]
                 .map(value => ({ value, sort: Math.random() }))
                 .sort((a, b) => a.sort - b.sort)
                 .map(({ value }) => value);
 
-            shuffledOptions.forEach(opt => {
+            let firstAttempt = true;
+
+            const topRow = document.createElement('div');
+            topRow.className = 'quiz-option-row';
+            const bottomRow = document.createElement('div');
+            bottomRow.className = 'quiz-option-single';
+
+            for (let i = 0; i < Math.min(2, shuffledOptions.length); i++) {
+                const opt = shuffledOptions[i];
                 const el = document.createElement('div');
                 el.className = 'quiz-option';
                 el.textContent = opt;
-
-                el.onclick = () => {
+                el.onclick = function() {
                     if (opt !== q.answer) {
-                        el.classList.add('wrong');
-                        setTimeout(() => el.classList.remove('wrong'), 400);
+                        this.classList.add('wrong');
+                        setTimeout(() => this.classList.remove('wrong'), 400);
                         firstAttempt = false;
                     } else {
                         if (firstAttempt) {
@@ -661,9 +688,36 @@
                         quizActive = false;
                     }
                 };
+                topRow.appendChild(el);
+            }
 
-                cont.appendChild(el);
-            });
+            if (shuffledOptions.length > 2) {
+                const opt = shuffledOptions[2];
+                const el = document.createElement('div');
+                el.className = 'quiz-option';
+                el.textContent = opt;
+                el.onclick = function() {
+                    if (opt !== q.answer) {
+                        this.classList.add('wrong');
+                        setTimeout(() => this.classList.remove('wrong'), 400);
+                        firstAttempt = false;
+                    } else {
+                        if (firstAttempt) {
+                            score += 5;
+                            updateScore();
+                            showScoreBonus(document.querySelector('.quiz-container'));
+                        }
+                        document.getElementById('quizOverlay').style.display = 'none';
+                        quizActive = false;
+                    }
+                };
+                bottomRow.appendChild(el);
+            }
+
+            cont.appendChild(topRow);
+            if (shuffledOptions.length > 2) {
+                cont.appendChild(bottomRow);
+            }
             
             document.getElementById('quizOverlay').style.display = 'flex';
         }
@@ -688,17 +742,24 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // ✅ Управление: мышь + сенсор
+        function handlePointerMove(clientX) {
+            if (!gameRunning || quizActive) return;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = clientX - rect.left;
+            cart.x = Math.max(0, Math.min(canvas.width - cart.width, mouseX - cart.width / 2));
+        }
+
+        canvas.addEventListener('mousemove', (e) => handlePointerMove(e.clientX));
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            handlePointerMove(e.touches[0].clientX);
+        }, { passive: false });
+
         document.addEventListener('keydown', (e) => {
             if (!gameRunning || quizActive) return;
             if (e.key === 'ArrowLeft') cart.x = Math.max(0, cart.x - 20);
             else if (e.key === 'ArrowRight') cart.x = Math.min(canvas.width - cart.width, cart.x + 20);
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (!gameRunning || quizActive) return;
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            cart.x = Math.max(0, Math.min(canvas.width - cart.width, mouseX - cart.width / 2));
         });
     </script>
 </body>
