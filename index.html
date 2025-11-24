@@ -89,8 +89,9 @@
             z-index: 100;
         }
         
+        /* ✅ НЕЖНО-ЗЕЛЁНЫЙ ЦВЕТ ПЛАШКИ */
         .quiz-container {
-            background: #fff8e1;
+            background: #e8f5e9; /* вместо #fff8e1 */
             padding: 25px;
             border-radius: 16px;
             color: black;
@@ -451,10 +452,15 @@
         const cartImage = new Image();
         cartImage.src = "https://i.postimg.cc/sx5BjSF7/4.png";
 
+        // ✅ Игровая зона (в координатах canvas 800px)
+        const GAME_AREA_LEFT = 80;
+        const GAME_AREA_RIGHT = 720;
+        const GAME_AREA_WIDTH = GAME_AREA_RIGHT - GAME_AREA_LEFT;
+
         const CART_TARGET_HEIGHT = 140;
 
         let cart = { 
-            x: canvas.width / 2 - 70, 
+            x: GAME_AREA_LEFT + (GAME_AREA_WIDTH - 140) / 2,
             y: canvas.height - 160,
             width: 140, 
             height: CART_TARGET_HEIGHT 
@@ -538,7 +544,7 @@
             shuffledQuizQuestions = shuffleArray(quizQuestions);
             
             cart.width = settings.cartWidth;
-            cart.x = Math.max(0, Math.min(canvas.width - cart.width, canvas.width / 2 - cart.width / 2));
+            cart.x = GAME_AREA_LEFT + (GAME_AREA_WIDTH - cart.width) / 2;
             
             updateScore(); updateLives(); updateMisses();
             document.getElementById('gameControls').style.display = 'none';
@@ -593,9 +599,9 @@
             const settings = difficultySettings[currentDifficulty];
             const speed = settings.speedMin + Math.random() * (settings.speedMax - settings.speedMin);
 
-            // ✅ Предметы не падают на край (отступ 60px слева и справа)
+            // ✅ Предметы падают ТОЛЬКО в видимой зоне
             items.push({
-                x: 60 + Math.random() * (canvas.width - w - 120),
+                x: GAME_AREA_LEFT + Math.random() * (GAME_AREA_WIDTH - w),
                 y: -h,
                 width: w,
                 height: h,
@@ -760,7 +766,8 @@
             if (!gameRunning || quizActive) return;
             const rect = canvas.getBoundingClientRect();
             const canvasX = ((clientX - rect.left) / rect.width) * 800;
-            cart.x = Math.max(0, Math.min(800 - cart.width, canvasX - cart.width / 2));
+            // ✅ Ограничение по игровой зоне
+            cart.x = Math.max(GAME_AREA_LEFT, Math.min(GAME_AREA_RIGHT - cart.width, canvasX - cart.width / 2));
         }
 
         canvas.addEventListener('mousemove', (e) => {
@@ -782,8 +789,9 @@
 
         document.addEventListener('keydown', (e) => {
             if (!gameRunning || quizActive) return;
-            if (e.key === 'ArrowLeft') cart.x = Math.max(0, cart.x - 20);
-            else if (e.key === 'ArrowRight') cart.x = Math.min(800 - cart.width, cart.x + 20);
+            // ✅ Ограничение по игровой зоне
+            if (e.key === 'ArrowLeft') cart.x = Math.max(GAME_AREA_LEFT, cart.x - 20);
+            else if (e.key === 'ArrowRight') cart.x = Math.min(GAME_AREA_RIGHT - cart.width, cart.x + 20);
         });
     </script>
 </body>
