@@ -593,8 +593,9 @@
             const settings = difficultySettings[currentDifficulty];
             const speed = settings.speedMin + Math.random() * (settings.speedMax - settings.speedMin);
 
+            // ✅ Предметы не падают на край (отступ 60px слева и справа)
             items.push({
-                x: Math.random() * (canvas.width - w),
+                x: 60 + Math.random() * (canvas.width - w - 120),
                 y: -h,
                 width: w,
                 height: h,
@@ -755,11 +756,9 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // ✅ ИСПРАВЛЕННОЕ УПРАВЛЕНИЕ — ТОЧНЫЕ КООРДИНАТЫ
         function handlePointerMove(clientX) {
             if (!gameRunning || quizActive) return;
             const rect = canvas.getBoundingClientRect();
-            // Преобразуем позицию на экране в координаты canvas (0..800)
             const canvasX = ((clientX - rect.left) / rect.width) * 800;
             cart.x = Math.max(0, Math.min(800 - cart.width, canvasX - cart.width / 2));
         }
