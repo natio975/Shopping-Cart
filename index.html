@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Collocation Catcher</title>
     <style>
-        body {
+        html, body {
+            overscroll-behavior: none; /* отключает подпрыгивание на iOS */
             margin: 0;
             padding: 0;
             background: #f0f0f0;
@@ -259,8 +260,9 @@
             text-shadow: 0 0 5px black;
         }
         
+        /* ✅ Адаптивный заголовок */
         .start-title {
-            font-size: 36px;
+            font-size: clamp(28px, 6vw, 36px);
             color: white;
             margin-bottom: 40px;
             text-shadow: 0 0 5px grey;
@@ -268,11 +270,16 @@
             padding: 10px 20px;
             border-radius: 12px;
             display: inline-block;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90vw;
         }
         
         .start-btn {
-            padding: 12px 32px;
-            font-size: 20px;
+            padding: 10px 18px;
+            font-size: clamp(16px, 4vw, 20px);
             background: #4CAF50;
             color: white;
             border: none;
@@ -290,7 +297,7 @@
             color: white;
             padding: 6px 14px;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: clamp(14px, 3.5vw, 16px);
             font-weight: 600;
             text-shadow: 0 0 3px black;
             letter-spacing: 0.5px;
@@ -321,14 +328,14 @@
         }
 
         .win-title {
-            font-size: 42px;
+            font-size: clamp(32px, 8vw, 42px);
             color: gold;
             margin-bottom: 15px;
             text-shadow: 0 0 15px gold;
         }
 
         .win-subtitle {
-            font-size: 20px;
+            font-size: clamp(18px, 5vw, 20px);
             color: #eee;
             margin-bottom: 25px;
             line-height: 1.4;
@@ -336,7 +343,7 @@
 
         .play-again-btn {
             padding: 12px 32px;
-            font-size: 20px;
+            font-size: clamp(16px, 4vw, 20px);
             background: #4CAF50;
             color: white;
             border: none;
@@ -370,9 +377,9 @@
         
         <div class="start-screen" id="startScreen">
             <h1 class="start-title">🛒 Collocation Catcher</h1>
-            <div style="margin-top: 10px; display: flex; gap: 20px;">
-                <button class="start-btn" style="background:#4CAF50; padding:10px 24px;" onclick="startGame('easy')">Easy</button>
-                <button class="start-btn" style="background:#f44336; padding:10px 24px;" onclick="startGame('hard')">Hard</button>
+            <div style="margin-top: 10px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                <button class="start-btn" style="background:#4CAF50;" onclick="startGame('easy')">Easy</button>
+                <button class="start-btn" style="background:#f44336;" onclick="startGame('hard')">Hard</button>
             </div>
             <div class="help-btn" onclick="showInstructions()">?</div>
             <div class="author-badge" id="authorBadge">@ioffenat</div>
@@ -754,6 +761,7 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // ✅ ИСПРАВЛЕННОЕ УПРАВЛЕНИЕ ДЛЯ ТЕЛЕФОНА
         function handlePointerMove(clientX) {
             if (!gameRunning || quizActive) return;
             const rect = canvas.getBoundingClientRect();
@@ -761,10 +769,21 @@
             cart.x = Math.max(0, Math.min(canvas.width - cart.width, mouseX - cart.width / 2));
         }
 
-        canvas.addEventListener('mousemove', (e) => handlePointerMove(e.clientX));
+        canvas.addEventListener('mousemove', (e) => {
+            handlePointerMove(e.clientX);
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (gameRunning && !quizActive) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
         canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            handlePointerMove(e.touches[0].clientX);
+            if (gameRunning && !quizActive) {
+                e.preventDefault();
+                handlePointerMove(e.touches[0].clientX);
+            }
         }, { passive: false });
 
         document.addEventListener('keydown', (e) => {
